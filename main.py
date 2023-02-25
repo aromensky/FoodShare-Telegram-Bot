@@ -65,17 +65,21 @@ def handle_text(update, context):
             context.user_data['state'] = 'ADD_ITEM'
             context.bot.send_message(chat_id=update.effective_chat.id, text="Введите название продукта:", reply_markup=ReplyKeyboardRemove())
         elif text == '/list_items':
+            
             # Переходим к просмотру списка продуктов
             list_items(update, context)
         elif text == '/find_item':
+            
             # Переходим к поиску прод
- bot.send_message(chat_id=chat_id, text='Введите название продукта, который вы ищете:')
-        # переключаем состояние пользователя на поиск товара
-        user_states[user_id] = SEARCH_ITEM_STATE
+            bot.send_message(chat_id=chat_id, text='Введите название продукта, который вы ищете:')
+       
+            # переключаем состояние пользователя на поиск товара
+            user_states[user_id] = SEARCH_ITEM_STATE
         
     # Обработчик команды /add_item
     elif text == '/add_item':
         bot.send_message(chat_id=chat_id, text='Введите название продукта, который вы хотите отдать:')
+        
         # переключаем состояние пользователя на добавление товара
         user_states[user_id] = ADD_ITEM_STATE
 
@@ -94,6 +98,7 @@ def handle_text(update, context):
         
         # Выводим сообщение пользователю
         bot.send_message(chat_id=chat_id, text=message)
+        
         # переключаем состояние пользователя на исходное
         user_states[user_id] = DEFAULT_STATE
 
@@ -104,5 +109,61 @@ def handle_text(update, context):
         
         # Выводим сообщение пользователю
         bot.send_message(chat_id=chat_id, text='Спасибо, ваш товар был добавлен в список!')
+        
         # переключаем состояние пользователя на исходное
         user_states[user_id] = DEFAULT_STATE
+    
+    # Обработчик команды /list_items
+    elif text == '/list_items':
+        # Получаем список товаров пользователя из базы данных
+        items = db.get_items(user_id)
+        
+        # Формируем сообщение со списком товаров
+        message = 'Ваши товары:\n\n'
+            for i, item in enumerate(items):
+                message += f'{i+1}. {item}\n'
+        
+        # Если список товаров пуст, сообщаем об этом
+        if not items:
+        message = 'У вас пока нет товаров в списке'
+        
+        # Выводим сообщение пользователю
+        bot.send_message(chat_id=chat_id, text=message)
+    
+    # Обработчик команды /find_item
+    elif text == '/find_item':
+        
+        # Устанавливаем состояние пользователя в поиске товара
+        user_states[user_id] = FIND_ITEM_STATE
+        
+        # Выводим сообщение с запросом описания товара
+        bot.send_message(chat_id=chat_id, text='Введите описание товара, который вы ищете')
+    
+    # Обработчик текстовых сообщений в состоянии FIND_ITEM_STATE
+    elif user_states[user_id] == FIND_ITEM_STATE:
+        
+        # Получаем список товаров пользователя из базы данных
+        items = db.get_items(user_id)
+        
+        # Ищем товары, которые содержат введенное пользователем описание
+        found_items = []
+            for item in items:
+                if text.lower() in item.lower():
+                    found_items.append(item)
+
+        # Формируем сообщение с найденными товарами
+        message = f'Найдено {len(found_items)} товаров:\n\n'
+            for i, item in enumerate(found_items):
+                message += f'{i+1}. {item}\n'
+
+            # Если ничего не найдено, сообщаем об этом
+                if not found_items:
+                message = 'Ничего не найдено'
+
+        # Выводим сообщение пользователю
+        bot.send_message(chat_id=chat_id, text=message)
+        
+     # Обработчик неизвестной команды
+     else:
+        bot.send_message(chat_id=chat_id, text='Неизвестная команда. Введите /help, чтобы узнать доступные команды')
+        
