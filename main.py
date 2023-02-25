@@ -166,4 +166,32 @@ def handle_text(update, context):
      # Обработчик неизвестной команды
      else:
         bot.send_message(chat_id=chat_id, text='Неизвестная команда. Введите /help, чтобы узнать доступные команды')
+     
+     # Обработчик текстовых сообщений в состоянии FIND_ITEM_STATE
+     elif user_states[user_id] == FIND_ITEM_STATE:
+        # Ищем товар в базе данных
+        items = db.find_item(user_id, text)
+        if items:
+            # Формируем сообщение с найденными товарами
+            message = 'Найденные товары:\n'
+            for item in items:
+                message += f'- {item}\n'
+        else:
+            message = 'Товары не найдены'
+        # Выводим сообщение пользователю
+        bot.send_message(chat_id=chat_id, text=message)
+        # переключаем состояние пользователя на исходное
+        user_states[user_id] = DEFAULT_STATE
+
+    # Обработчик команды /start
+    elif text == '/start':
+        # Выводим приветственное сообщение
+        bot.send_message(chat_id=chat_id, text='Привет! Я бот для подбора еды!')
+        # переключаем состояние пользователя на исходное
+        user_states[user_id] = DEFAULT_STATE
+
+    # Обработчик неизвестной команды
+    else:
+        # Выводим сообщение пользователю
+        bot.send_message(chat_id=chat_id, text='Неизвестная команда')
         
